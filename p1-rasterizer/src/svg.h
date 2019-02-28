@@ -22,6 +22,7 @@ namespace CGL {
 
 class DrawRend;
 
+//一个用来表示不同类型元素的枚举
 typedef enum e_SVGElementType {
   NONE = 0,
   POINT,
@@ -47,12 +48,13 @@ struct SVGElement {
 
   SVGElement( SVGElementType _type ) 
     : type( _type ), transform( Matrix3x3::identity() ) { }
-
+  //虚析构函数，基类的析构函数应该写成虚函数的形式
   virtual ~SVGElement() { }
 
+  //=0表示纯虚函数, 纯虚函数无需定义
   virtual void draw(DrawRend *dr, Matrix3x3 global_transform) = 0;
 
-  // primitive type
+  // primitive type, 一个枚举
   SVGElementType type;
 
   // styling

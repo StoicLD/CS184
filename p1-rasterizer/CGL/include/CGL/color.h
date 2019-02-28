@@ -42,6 +42,7 @@ class Color {
   Color( const unsigned char* arr );
 
   // Array-style access
+  // 这里不是很看得懂
   float& operator[](int k) {
     return (&r)[k];
   }

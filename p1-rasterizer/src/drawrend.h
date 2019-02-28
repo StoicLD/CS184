@@ -66,6 +66,7 @@ class DrawRend : public Renderer {
 
 private:
   // Global state variables for SVGs, pixels, and view transforms
+  // svgs应该是一堆图片的集合，渲染器用来渲染的目标图片集合
   std::vector<SVG*> svgs; size_t current_svg;
   std::vector<Matrix3x3> svg_to_ndc;
   float view_x, view_y, view_span;
@@ -90,7 +91,9 @@ private:
 
   // Intuitively, a sample buffer instance is a pixel,
   // or (samples_per_side x samples_per_side) sub-pixels.
+  //一个 SampleBuffer 代表一个pixel,默认是正方形的区域
   struct SampleBuffer {
+    //sub_pixel的集合，一个三维向量，本质上是一个二维区域，每个sub_pixel有三通道
     std::vector<std::vector<PixelColorStorage> > sub_pixels;
     size_t samples_per_side;
 
@@ -103,7 +106,16 @@ private:
       PixelColorStorage &p = sub_pixels[i][j];
       // Part 1: Overwrite PixelColorStorage p using Color c.
       //         Pay attention to different data types.
-      return;
+      if(p.size() != 3)
+      {
+        std::cout<<"PixelColorStorage没有初始化！"<<endl;
+      }
+      else
+      {
+        p[0] = (uint8_t)(c.r * 255);
+        p[1] = (uint8_t)(c.g * 255);
+        p[2] = (uint8_t)(c.b * 255);
+      }
     }
 
     void fill_pixel(Color c) {
@@ -118,10 +130,14 @@ private:
     }
     
     void clear() {
+      //
       if (sub_pixels.size() == samples_per_side) {
         for (int i = 0; i < samples_per_side; ++i)
           for (int j = 0; j < samples_per_side; ++j)
-            sub_pixels[i][j].assign(3, (unsigned char)255);
+          {
+            //三维向量sub_pixels中的一维复制为大小为3，每个元素值为255的一个向量
+            sub_pixels[i][j].assign(3, (unsigned char) 255);
+          }
         return;
       }
 
@@ -137,6 +153,7 @@ private:
     }
   };
 
+  //代表采样buffer的二维向量
   std::vector<std::vector<SampleBuffer> > samplebuffer;
 
   // This function takes the collected sub-pixel samples and

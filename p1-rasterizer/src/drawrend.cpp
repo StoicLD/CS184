@@ -7,6 +7,7 @@
 #include "CGL/lodepng.h"
 #include "texture.h"
 #include <ctime>
+#include <cmath>
 using namespace std;
 
 namespace CGL {
@@ -61,6 +62,7 @@ void DrawRend::resize( size_t w, size_t h ) {
   framebuffer.resize(4 * w * h);
 
   samplebuffer.clear();
+  //一行，每个元素是一个采样buffer（对应一个像素）
   vector<SampleBuffer> samplebuffer_row(width, SampleBuffer(sqrt(sample_rate)));
   for (int i = 0; i < height; ++i)
     samplebuffer.push_back(samplebuffer_row);
@@ -492,6 +494,7 @@ void DrawRend::rasterize_line( float x0, float y0,
 }
 
 // Rasterize a triangle.
+//看样子这个函数非常的重要，毕竟是核心的光栅化函数，三角形作为基本图形，绘制三角形
 void DrawRend::rasterize_triangle( float x0, float y0,
                          float x1, float y1,
                          float x2, float y2,
@@ -501,6 +504,58 @@ void DrawRend::rasterize_triangle( float x0, float y0,
   //         rasterized points and lines, then start rasterizing triangles.
   //         Use something like this:
   //             samplebuffer[row][column].fill_pixel(color);
+
+  //照着我现在的理解，samplebuffer应该是整个屏幕
+  //注意给定的三个点是顺时针顺序还是逆时针顺序是不定的！！！！因此不能假设为某一种顺序
+  //(1)为了加速采样，把遍历区域改成一个长方形
+  //
+  float xMax = std::max(x0, x1);
+  xMax = std::max(xMax, x2);
+  float yMax = std::max(y0, y1);
+  yMax = std::max(yMax, y2);
+  float xMin = std::min(x0, x1);
+  xMin = std::min(xMin, x2);
+  float yMin = std::min(y0, y1);
+  yMin = std::min(yMin, y2);
+
+  float dx_10 = x1 - x0;
+  float dx_21 = x2 - x1;
+  float dx_02 = x0 - x2;
+  float dy_10 = y1 - y0;
+  float dy_21 = y2 - y1;
+  float dy_02 = y0 - y2;
+
+  for (int x = (int)xMin; x < (int)xMax; x++)
+  {
+      for (int y = (int)yMin; y < (int)yMax; y++)
+      {
+          float xCenter = x + 0.5f;
+          float yCenter = y + 0.5f;
+          int isInside = 0;
+          //对于每个遍历范围内的点进行检测，检测是否在三角形之内
+          //理论上只要三边都大于零或者都小于零就是在三角形之内
+          //应为根据计算公式，我们假定法向量是顺时针或者逆时针的
+          //但是根据P0 P1 P2三点的顺逆时针顺序，会使得得到的sin值全正或者全负（点在三角形之内）
+
+          if (-dy_10 * (xCenter - x0) + dx_10 * (yCenter - y0) >= 0)
+              isInside++;
+          if (-dy_21 * (xCenter - x1) + dx_21 * (yCenter - y1) >= 0)
+              isInside++;
+          if (-dy_02 * (xCenter - x2) + dx_02 * (yCenter - y2) >= 0)
+              isInside++;
+
+          if (isInside == 0 || isInside == 3)
+          {
+              int xInt = x;
+              int yInt = y;
+              //行和列不要弄混了
+              if (yInt >= 0 && yInt < samplebuffer.size() && xInt >= 0 && xInt < samplebuffer[yInt].size())
+                  samplebuffer[yInt][xInt].fill_pixel(color);
+          }
+      }
+  }
+
+
   // Part 2: Add supersampling.
   //         You need to write color to each sub-pixel by yourself,
   //         instead of using the fill_pixel() function.
@@ -510,6 +565,7 @@ void DrawRend::rasterize_triangle( float x0, float y0,
   // Part 4: Add barycentric coordinates and use tri->color for shading when available.
   // Part 5: Fill in the SampleParams struct and pass it to the tri->color function.
   // Part 6: Pass in correct barycentric differentials to tri->color for mipmapping.
+
 
 
 }

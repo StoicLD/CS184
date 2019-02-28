@@ -14,7 +14,8 @@ const Color Color::White  = Color(1,1,1);
 const Color Color::Black  = Color(0,0,0);
 
 Color::Color( const unsigned char* arr ) {
-  float inv = 1.0 / 255.0;
+  //加了一个f，不然成为双精度了
+  float inv = 1.0f / 255.0f;
   r = arr[0] * inv;
   g = arr[1] * inv;
   b = arr[2] * inv;
