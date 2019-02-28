@@ -186,6 +186,7 @@ void DrawRend::keyboard_event( int key, int event, unsigned char mods ) {
         sample_rate = (int)(sqrt(sample_rate)+1)*(sqrt(sample_rate)+1);
 
         samplebuffer.clear();
+        //每一行，x为宽度大小，每个元素都初始化为sample_size边长为sqrt(sample_rate)的一个SampleBuffer
         vector<SampleBuffer> samplebuffer_row(width, SampleBuffer(sqrt(sample_rate)));
         for (int i = 0; i < height; ++i)
           samplebuffer.push_back(samplebuffer_row);
@@ -529,39 +530,73 @@ void DrawRend::rasterize_triangle( float x0, float y0,
   {
       for (int y = (int)yMin; y < (int)yMax; y++)
       {
-          float xCenter = x + 0.5f;
-          float yCenter = y + 0.5f;
-          int isInside = 0;
+          //行和列不要弄混了
+          if (y < 0 || y >= samplebuffer.size() || x < 0 || x >= samplebuffer[y].size())
+              continue;
+//        for part 1
+//        float xCenter = x + 0.5f;
+//        float yCenter = y + 0.5f;
+
+        // Part 2: Add supersampling.
+        //         You need to write color to each sub-pixel by yourself,
+        //         instead of using the fill_pixel() function.
+        //         Hint: Use the fill_color() function like this:
+        //             samplebuffer[row][column].fill_color(sub_row, sub_column, color);
+        //         You also need to implement get_pixel_color() function to support supersampling.
+        //
+        // for part 2
+          const SampleBuffer &p = samplebuffer[y][x];
+          for(int sub_x = 0; sub_x < p.samples_per_side; sub_x++)
+          {
+            for(int sub_y = 0; sub_y < p.samples_per_side; sub_y++)
+            {
+              float centLength = (0.5f / p.samples_per_side);
+              float xCenter = x + centLength * (sub_x + 1) - centLength / 2;
+              float yCenter = y + centLength * (sub_y + 1) - centLength / 2;
+
+              int isInside = 0;
+              if (-dy_10 * (xCenter - x0) + dx_10 * (yCenter - y0) >= 0)
+                isInside++;
+              if (-dy_21 * (xCenter - x1) + dx_21 * (yCenter - y1) >= 0)
+                isInside++;
+              if (-dy_02 * (xCenter - x2) + dx_02 * (yCenter - y2) >= 0)
+                isInside++;
+
+              if (isInside == 0 || isInside == 3) {
+                samplebuffer[y][x].fill_color(sub_x, sub_y, color);
+              }
+            }
+          }
+
+          /*
+           * for part 1
+           */
+          //float xCenter = x + 0.5f;
+          //float yCenter = y + 0.5f;
+          //int isInside = 0;
           //对于每个遍历范围内的点进行检测，检测是否在三角形之内
           //理论上只要三边都大于零或者都小于零就是在三角形之内
           //应为根据计算公式，我们假定法向量是顺时针或者逆时针的
           //但是根据P0 P1 P2三点的顺逆时针顺序，会使得得到的sin值全正或者全负（点在三角形之内）
+//
+//          if (-dy_10 * (xCenter - x0) + dx_10 * (yCenter - y0) >= 0)
+//              isInside++;
+//          if (-dy_21 * (xCenter - x1) + dx_21 * (yCenter - y1) >= 0)
+//              isInside++;
+//          if (-dy_02 * (xCenter - x2) + dx_02 * (yCenter - y2) >= 0)
+//              isInside++;
+//
+//          if (isInside == 0 || isInside == 3)
+//          {
+//              samplebuffer[y][x].fill_pixel(color);
+//          }
 
-          if (-dy_10 * (xCenter - x0) + dx_10 * (yCenter - y0) >= 0)
-              isInside++;
-          if (-dy_21 * (xCenter - x1) + dx_21 * (yCenter - y1) >= 0)
-              isInside++;
-          if (-dy_02 * (xCenter - x2) + dx_02 * (yCenter - y2) >= 0)
-              isInside++;
 
-          if (isInside == 0 || isInside == 3)
-          {
-              int xInt = x;
-              int yInt = y;
-              //行和列不要弄混了
-              if (yInt >= 0 && yInt < samplebuffer.size() && xInt >= 0 && xInt < samplebuffer[yInt].size())
-                  samplebuffer[yInt][xInt].fill_pixel(color);
-          }
       }
   }
 
 
-  // Part 2: Add supersampling.
-  //         You need to write color to each sub-pixel by yourself,
-  //         instead of using the fill_pixel() function.
-  //         Hint: Use the fill_color() function like this:
-  //             samplebuffer[row][column].fill_color(sub_row, sub_column, color);
-  //         You also need to implement get_pixel_color() function to support supersampling.
+
   // Part 4: Add barycentric coordinates and use tri->color for shading when available.
   // Part 5: Fill in the SampleParams struct and pass it to the tri->color function.
   // Part 6: Pass in correct barycentric differentials to tri->color for mipmapping.

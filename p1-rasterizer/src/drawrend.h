@@ -87,14 +87,16 @@ private:
 
   bool gl;
 
+  //这个向量就是三通道RGB，size为3
   typedef std::vector<unsigned char> PixelColorStorage;
 
   // Intuitively, a sample buffer instance is a pixel,
   // or (samples_per_side x samples_per_side) sub-pixels.
-  //一个 SampleBuffer 代表一个pixel,默认是正方形的区域
+  //一个 SampleBuffer 代表一个采样区域（一开始是一个pixel）,默认是正方形的区域
   struct SampleBuffer {
     //sub_pixel的集合，一个三维向量，本质上是一个二维区域，每个sub_pixel有三通道
     std::vector<std::vector<PixelColorStorage> > sub_pixels;
+    //这个就是sub-pixel的边长
     size_t samples_per_side;
 
     SampleBuffer(size_t sps): samples_per_side(sps) {
@@ -118,6 +120,7 @@ private:
       }
     }
 
+    //填充每个sub-pixel
     void fill_pixel(Color c) {
       for (int i = 0; i < samples_per_side; ++i)
         for (int j = 0; j < samples_per_side; ++j)
@@ -125,8 +128,32 @@ private:
     }
 
     Color get_pixel_color() {
-      return Color(sub_pixels[0][0].data());
+      //vector::data 是第一个元素的地址
+      //return Color(sub_pixels[0][0].data());
       // Part 2: Implement get_pixel_color() for supersampling.
+      // 需要返回平均颜色
+      Color arrageColor(sub_pixels[0][0].data());
+      for(int i = 1; i < samples_per_side; i++)
+      {
+        for(int j = 1; j < samples_per_side; j++)
+        {
+            try
+            {
+                PixelColorStorage &p = sub_pixels[i][j];
+                arrageColor += Color(p[0], p[1], p[2]);
+            }
+            catch (int x)
+            {
+                std::cout<<"sub_pixels的长度与samples_per_side不相等！"<<std::endl;
+            }
+
+        }
+      }
+      //return Color(sub_pixels[0][0].data());
+      arrageColor.r /= samples_per_side;
+      arrageColor.g /= samples_per_side;
+      arrageColor.b /= samples_per_side;
+      return arrageColor;
     }
     
     void clear() {
@@ -162,8 +189,11 @@ private:
   void resolve() {
     for (int x = 0; x < width; ++x) {
       for (int y = 0; y < height; ++y) {
+        //这里获取的是一个pixel的颜色，所以在Part2中我们需要平均这个pixel下面的sub-pixel
+        //使得图形更加平滑
         Color col = samplebuffer[y][x].get_pixel_color();
         for (int k = 0; k < 3; ++k) {
+          //framebuffer帧缓存是显示屏的缓存，最终用来显示到屏幕上
           framebuffer[3 * (y * width + x) + k] = (&col.r)[k] * 255;
         }
       }
