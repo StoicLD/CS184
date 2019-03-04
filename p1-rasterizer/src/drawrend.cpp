@@ -530,12 +530,13 @@ void DrawRend::rasterize_triangle( float x0, float y0,
   {
       for (int y = (int)yMin; y < (int)yMax; y++)
       {
-          //行和列不要弄混了
+          //行和列不要弄混了,为了避免下标溢出的情况做了一些检查工作
           if (y < 0 || y >= samplebuffer.size() || x < 0 || x >= samplebuffer[y].size())
               continue;
-//        for part 1
-//        float xCenter = x + 0.5f;
-//        float yCenter = y + 0.5f;
+          //for part 1
+          //中心采样点
+          // float xCenter = x + 0.5f;
+          //float yCenter = y + 0.5f;
 
         // Part 2: Add supersampling.
         //         You need to write color to each sub-pixel by yourself,
@@ -545,16 +546,20 @@ void DrawRend::rasterize_triangle( float x0, float y0,
         //         You also need to implement get_pixel_color() function to support supersampling.
         //
         // for part 2
+        //获取一个pixel的引用
           const SampleBuffer &p = samplebuffer[y][x];
+          //对每个sub-pixel进行判断和填充颜色
           for(int sub_x = 0; sub_x < p.samples_per_side; sub_x++)
           {
             for(int sub_y = 0; sub_y < p.samples_per_side; sub_y++)
             {
-              float centLength = (0.5f / p.samples_per_side);
-              float xCenter = x + centLength * (sub_x + 1) - centLength / 2;
-              float yCenter = y + centLength * (sub_y + 1) - centLength / 2;
+              float centerLength = (1.0f / p.samples_per_side);
+              float xCenter = x + centerLength * (sub_x + 1) - centerLength / 2;
+              float yCenter = y + centerLength * (sub_y + 1) - centerLength / 2;
 
               int isInside = 0;
+              //三角形内部判断（当isInside是0或者3也就是与三边的法向量夹角全部是
+              //锐角或者全部是钝角的时候在三角形的内部。
               if (-dy_10 * (xCenter - x0) + dx_10 * (yCenter - y0) >= 0)
                 isInside++;
               if (-dy_21 * (xCenter - x1) + dx_21 * (yCenter - y1) >= 0)
@@ -578,7 +583,6 @@ void DrawRend::rasterize_triangle( float x0, float y0,
           //理论上只要三边都大于零或者都小于零就是在三角形之内
           //应为根据计算公式，我们假定法向量是顺时针或者逆时针的
           //但是根据P0 P1 P2三点的顺逆时针顺序，会使得得到的sin值全正或者全负（点在三角形之内）
-//
 //          if (-dy_10 * (xCenter - x0) + dx_10 * (yCenter - y0) >= 0)
 //              isInside++;
 //          if (-dy_21 * (xCenter - x1) + dx_21 * (yCenter - y1) >= 0)
@@ -590,8 +594,6 @@ void DrawRend::rasterize_triangle( float x0, float y0,
 //          {
 //              samplebuffer[y][x].fill_pixel(color);
 //          }
-
-
       }
   }
 

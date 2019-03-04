@@ -87,7 +87,7 @@ private:
 
   bool gl;
 
-  //这个向量就是三通道RGB，size为3
+  //这个向量就是三通道RGB，size为3, 这里三通道的取值范围是0-255
   typedef std::vector<unsigned char> PixelColorStorage;
 
   // Intuitively, a sample buffer instance is a pixel,
@@ -104,6 +104,7 @@ private:
     }
     
     // Fill the subpixel at i,j with the Color c
+    //用来填充sub-pixel的颜色
     void fill_color(int i, int j, Color c) {
       PixelColorStorage &p = sub_pixels[i][j];
       // Part 1: Overwrite PixelColorStorage p using Color c.
@@ -127,20 +128,25 @@ private:
           fill_color(i, j, c);
     }
 
+    //part2需要用到，返回平均的颜色
     Color get_pixel_color() {
       //vector::data 是第一个元素的地址
       //return Color(sub_pixels[0][0].data());
       // Part 2: Implement get_pixel_color() for supersampling.
       // 需要返回平均颜色
-      Color arrageColor(sub_pixels[0][0].data());
-      for(int i = 1; i < samples_per_side; i++)
+
+      if(samples_per_side == 1)
+          return Color(sub_pixels[0][0].data());
+
+      Color arrangeColor = Color();
+      for(int i = 0; i < samples_per_side; i++)
       {
-        for(int j = 1; j < samples_per_side; j++)
+        for(int j = 0; j < samples_per_side; j++)
         {
             try
             {
                 PixelColorStorage &p = sub_pixels[i][j];
-                arrageColor += Color(p[0], p[1], p[2]);
+                arrangeColor += Color((float)p[0] / 255, (float)p[1] / 255, (float)p[2] / 255);
             }
             catch (int x)
             {
@@ -150,10 +156,12 @@ private:
         }
       }
       //return Color(sub_pixels[0][0].data());
-      arrageColor.r /= samples_per_side;
-      arrageColor.g /= samples_per_side;
-      arrageColor.b /= samples_per_side;
-      return arrageColor;
+      //std::cout<<"平均前的颜色:"<<arrangeColor<<std::endl;
+      arrangeColor.r /= samples_per_side * samples_per_side;
+      arrangeColor.g /= samples_per_side * samples_per_side;
+      arrangeColor.b /= samples_per_side * samples_per_side;
+      //std::cout<<"平均后的颜色:"<<arrangeColor<<std::endl;
+      return arrangeColor;
     }
     
     void clear() {
