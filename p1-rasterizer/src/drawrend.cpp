@@ -526,9 +526,11 @@ void DrawRend::rasterize_triangle( float x0, float y0,
   float dy_21 = y2 - y1;
   float dy_02 = y0 - y2;
 
-  for (int x = (int)xMin; x < (int)xMax; x++)
+  //meide, 这里的一个bug是应该改成小于等于，否则像xMax = 127.5
+  //x只会到126，少了127这个像素点
+  for (int x = (int)xMin; x <= (int)xMax; x++)
   {
-      for (int y = (int)yMin; y < (int)yMax; y++)
+      for (int y = (int)yMin; y <= (int)yMax; y++)
       {
           //行和列不要弄混了,为了避免下标溢出的情况做了一些检查工作
           if (y < 0 || y >= samplebuffer.size() || x < 0 || x >= samplebuffer[y].size())

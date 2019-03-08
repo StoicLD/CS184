@@ -146,6 +146,7 @@ private:
             try
             {
                 PixelColorStorage &p = sub_pixels[i][j];
+                //这里注意要转型
                 arrangeColor += Color((float)p[0] / 255, (float)p[1] / 255, (float)p[2] / 255);
             }
             catch (int x)
