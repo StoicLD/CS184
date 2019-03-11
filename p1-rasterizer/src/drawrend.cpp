@@ -526,6 +526,11 @@ void DrawRend::rasterize_triangle( float x0, float y0,
   float dy_21 = y2 - y1;
   float dy_02 = y0 - y2;
 
+  // add for part4
+  bool isBary = false;
+  if(tri != nullptr)
+      isBary = true;
+
   //meide, 这里的一个bug是应该改成小于等于，否则像xMax = 127.5
   //x只会到126，少了127这个像素点
   for (int x = (int)xMin; x <= (int)xMax; x++)
@@ -570,7 +575,25 @@ void DrawRend::rasterize_triangle( float x0, float y0,
                 isInside++;
 
               if (isInside == 0 || isInside == 3) {
-                samplebuffer[y][x].fill_color(sub_x, sub_y, color);
+                  if(!isBary)
+                      samplebuffer[y][x].fill_color(sub_x, sub_y, color);
+                  //for part4，这里需要注意，由于三个坐标在传入的时候是经过一个全局变换的，所以x0等是与
+                  //其余不同的
+                  else
+                  {
+                      //要使用重心坐标插值获取颜色，而不是直接采样
+                      //先要计算重心坐标
+                      //std::cout<<"tri参数是："<<tri->p0_svg<<" 传入的第一个坐标是:"<<"("<<x0<<","<<x1<<")"<<std::endl;
+                      float params[3] = {1, 1, 1};
+                      if(!this->bary_coord(x, y, x0, y0, x1, y1, x2, y2, params))
+                      {
+                        samplebuffer[y][x].fill_color(sub_x, sub_y, color);
+                        return;
+                      }
+                      Vector3D v3(params[0], params[1], params[2]);
+                      Color cc = tri->color(v3);
+                      samplebuffer[y][x].fill_color(sub_x, sub_y, cc);
+                  }
               }
             }
           }
@@ -602,6 +625,7 @@ void DrawRend::rasterize_triangle( float x0, float y0,
 
 
   // Part 4: Add barycentric coordinates and use tri->color for shading when available.
+
   // Part 5: Fill in the SampleParams struct and pass it to the tri->color function.
   // Part 6: Pass in correct barycentric differentials to tri->color for mipmapping.
 
@@ -609,6 +633,25 @@ void DrawRend::rasterize_triangle( float x0, float y0,
 
 }
 
+bool DrawRend::bary_coord(int x, int y, float x0, float y0, float x1, float y1, float x2, float y2, float* params)
+{
+    params[0] = static_cast<float>(((-(x - x1)) * (y2 - y1)
+                                  + (y - y1) * (x2 - x1)) /
+                                    ((-(x0 - x1)) * (y2 - y1)
+                                  + (y0 - y1) * (x2 - x1)));
 
+    params[1] = static_cast<float>(((-(x - x2)) * (y0 - y2)
+                                  + (y - y2) * (x0 - x2)) /
+                                 ((-(x1 - x2)) * (y0 - y2)
+                                  + (y1 - y2) * (x0 - x2)));
+    params[2] = 1 - params[0] - params[1];
+//    if(params[0] > 1 || params[1] > 1 || params[2] > 1)
+//    {
+//      std::cout<<"计算错误参数大于1！"<<std::endl;
+//      std::cout<<"同时三个参数分别为，alpha:"<<params[0]<<" beta:"<<params[1]<<" gamma:"<<params[2]<<std::endl;
+//      return false;
+//    }
+    return true;
+}
 
 }

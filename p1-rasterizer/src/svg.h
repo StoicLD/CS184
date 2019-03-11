@@ -23,6 +23,7 @@ namespace CGL {
 class DrawRend;
 
 //一个用来表示不同类型元素的枚举
+//包括三角形，点，线，长方形，图片等等。。。
 typedef enum e_SVGElementType {
   NONE = 0,
   POINT,
@@ -44,6 +45,7 @@ struct Style {
   bool strokeVisible;
 };
 
+//svg元素，包含绘制类型，style，变换矩阵
 struct SVGElement {
 
   SVGElement( SVGElementType _type ) 
@@ -65,6 +67,8 @@ struct SVGElement {
   
 };
 
+//三角形继承自SVG，多了三个点
+//重载了draw，添加了一个color函数
 struct Triangle : SVGElement {
 
   Triangle(): SVGElement (TRIANGLE ) { }
