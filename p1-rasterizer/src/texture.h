@@ -29,9 +29,25 @@ struct MipLevel {
   // RGB color values
   std::vector<unsigned char> texels;
 
-  Color get_texel(int tx, int ty);
+  //实现一下
+  Color get_texel(int tx, int ty)
+  {
+      if(3 * (ty * width + tx) < 0 || 3 * (ty * width + tx + 2) >= texels.size())
+      {
+          std::cout<<"获取纹理坐标时下标越界！"<<std::endl;
+          return Color();
+      }
+      float r = static_cast<float>(texels[3 * (ty * width + tx)]) / 255;
+      float g = static_cast<float>(texels[3 * (ty * width + tx + 1)]) / 255;
+      float b = static_cast<float>(texels[3 * (ty * width + tx + 2)]) / 255;
+      Color c(r, g, b);
+      std::cout<<"颜色是"<<c<<std::endl;
+      return c;
+  }
+
 };
 
+//纹理的结构体
 struct Texture {
   size_t width;
   size_t height;

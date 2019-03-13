@@ -8,7 +8,24 @@ namespace CGL {
 
 Color Texture::sample(const SampleParams &sp) {
   // Parts 5 and 6: Fill this in.
+  // 检查sp的采样方式，决定采样的类型格式之类的
   // Should return a color sampled based on the psm and lsm parameters given
+  //std::cout<<"Texture::sample时纹理坐标是 "<<sp.p_uv<<std::endl;
+  if(sp.psm == P_NEAREST)
+  {
+      //std::cout<<"最邻近采样"<<std::endl;
+      if((sp.p_uv - sp.p_dx_uv).norm2() >= (sp.p_uv - sp.p_dy_uv).norm2())
+          return this->sample_nearest(sp.p_dy_uv + sp.p_uv);
+      else
+          return this->sample_nearest(sp.p_dx_uv + sp.p_uv);
+  }
+  else
+  {
+      //双线性插值的采样
+
+      return this->sample_bilinear(sp.p_uv);
+  }
+
   return Color();
 }
 
@@ -21,14 +38,23 @@ float Texture::get_level(const SampleParams &sp) {
 Color Texture::sample_nearest(Vector2D uv, int level) {
   // Optional helper function for Parts 5 and 6
   // Feel free to ignore or create your own
-  return Color();
+  if(level >= mipmap.size())
+    std::cout<<"level大于mipmap大小"<<std::endl;
+  int tx = static_cast<int>(uv.x * mipmap[level].width);
+  int ty = static_cast<int>(uv.y * mipmap[level].height);
+  return mipmap[level].get_texel(tx, ty);
 }
 
 // Returns the bilinear sample given a particular level and set of uv coords
 Color Texture::sample_bilinear(Vector2D uv, int level) {
   // Optional helper function for Parts 5 and 6
   // Feel free to ignore or create your own
-  return Color();
+  // for part5 先不管level
+  if(level >= mipmap.size())
+      std::cout<<"level大于mipmap大小"<<std::endl;
+  int tx = static_cast<int>(uv.x * mipmap[level].width);
+  int ty = static_cast<int>(uv.y * mipmap[level].height);
+  return mipmap[level].get_texel(tx, ty);
 }
 
 

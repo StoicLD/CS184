@@ -47,6 +47,7 @@ void Triangle::draw(DrawRend *dr, Matrix3x3 global_transform) {
  */
 Color ColorTri::color(Vector3D p_bary, Vector3D p_dx_bary, Vector3D p_dy_bary, SampleParams sp) {
   // Part 4: Fill this in.
+  // p_bary是alpha，beta，gama三个系数
   return Color(p_bary[0] * p0_col + p_bary[1] * p1_col + p_bary[2] * p2_col);
 }
 
@@ -59,8 +60,13 @@ Color ColorTri::color(Vector3D p_bary, Vector3D p_dx_bary, Vector3D p_dy_bary, S
  */
 Color TexTri::color(Vector3D p_bary, Vector3D p_dx_bary, Vector3D p_dy_bary, SampleParams sp) {
   // Part 5: Fill this in with bilinear sampling.
+  // 将传入的sp的uv坐标填充好
+  Vector2D vv(p_bary[0] * p0_uv.x + p_bary[1] * p1_uv.x + p_bary[2] * p2_uv.x,
+              p_bary[0] * p0_uv.y + p_bary[1] * p1_uv.y + p_bary[2] * p2_uv.y);
+  sp.p_uv = vv;
+  return tex->sample(sp);
   // Part 6: Fill this in with trilinear sampling as well.
-  return Color();
+  //return Color();
 }
 
 void Group::draw(DrawRend *dr, Matrix3x3 global_transform) {

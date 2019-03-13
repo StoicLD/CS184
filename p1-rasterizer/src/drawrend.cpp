@@ -528,8 +528,15 @@ void DrawRend::rasterize_triangle( float x0, float y0,
 
   // add for part4
   bool isBary = false;
+  SampleParams sp;
   if(tri != nullptr)
+  {
       isBary = true;
+      //for part5
+      sp.lsm = lsm;
+      sp.psm = psm;
+      std::cout<<"当前采样方式是:"<<psm<<std::endl;
+  }
 
   //meide, 这里的一个bug是应该改成小于等于，否则像xMax = 127.5
   //x只会到126，少了127这个像素点
@@ -591,7 +598,14 @@ void DrawRend::rasterize_triangle( float x0, float y0,
                         return;
                       }
                       Vector3D v3(params[0], params[1], params[2]);
-                      Color cc = tri->color(v3);
+                      //for part5 加入了新的参数，纹理坐标中临近的两个点
+                      /*    这两个点是为了part6准备的，暂时用不到
+                       *    ##
+                       *    ##
+                       */
+                      Vector3D p_dx_bary;
+                      Vector3D p_dy_bary;
+                      Color cc = tri->color(v3, p_dx_bary, p_dy_bary, sp);
                       samplebuffer[y][x].fill_color(sub_x, sub_y, cc);
                   }
               }
@@ -606,7 +620,7 @@ void DrawRend::rasterize_triangle( float x0, float y0,
           //int isInside = 0;
           //对于每个遍历范围内的点进行检测，检测是否在三角形之内
           //理论上只要三边都大于零或者都小于零就是在三角形之内
-          //应为根据计算公式，我们假定法向量是顺时针或者逆时针的
+          //因为根据计算公式，我们假定法向量是顺时针或者逆时针的
           //但是根据P0 P1 P2三点的顺逆时针顺序，会使得得到的sin值全正或者全负（点在三角形之内）
 //          if (-dy_10 * (xCenter - x0) + dx_10 * (yCenter - y0) >= 0)
 //              isInside++;

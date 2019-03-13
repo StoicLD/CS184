@@ -84,6 +84,7 @@ private:
   int show_zoom;
   int sample_rate;
 
+  //纹理采样的方法
   PixelSampleMethod psm;
   LevelSampleMethod lsm;
 
