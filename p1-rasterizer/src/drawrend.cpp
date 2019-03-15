@@ -581,7 +581,8 @@ void DrawRend::rasterize_triangle( float x0, float y0,
                       //先要计算重心坐标
                       //std::cout<<"tri参数是："<<tri->p0_svg<<" 传入的第一个坐标是:"<<"("<<x0<<","<<x1<<")"<<std::endl;
                       float params[3] = {1, 1, 1};
-                      if(!this->bary_coord(x, y, x0, y0, x1, y1, x2, y2, params))
+                      // 注意，这里需要传入的是xCenter和yCenter而不是x和y！！！！！
+                      if(!this->bary_coord(xCenter, yCenter, x0, y0, x1, y1, x2, y2, params))
                       {
                         samplebuffer[y][x].fill_color(sub_x, sub_y, color);
                         return;
@@ -619,27 +620,37 @@ void DrawRend::rasterize_triangle( float x0, float y0,
 
 }
 
+float LineEquation(float x, float y, float x1, float y1, float x2, float y2)
+{
+    return (-(x - x1) * (y2 - y1) + (y - y1) * (x2 - x1));
+}
+
+
 /**
  * 设置重心坐标
  */
-bool DrawRend::bary_coord(int x, int y, float x0, float y0, float x1, float y1, float x2, float y2, float* params)
+bool DrawRend::bary_coord(float x, float y, float x0, float y0, float x1, float y1, float x2, float y2, float* params)
 {
-    params[0] = static_cast<float>(((-(x - x1)) * (y2 - y1)
-                                  + (y - y1) * (x2 - x1)) /
-                                    ((-(x0 - x1)) * (y2 - y1)
-                                  + (y0 - y1) * (x2 - x1)));
-
-    params[1] = static_cast<float>(((-(x - x2)) * (y0 - y2)
-                                  + (y - y2) * (x0 - x2)) /
-                                 ((-(x1 - x2)) * (y0 - y2)
-                                  + (y1 - y2) * (x0 - x2)));
-    params[2] = 1 - params[0] - params[1];
+    float alpha, beta, gamma;
+//    alpha = params[0] = static_cast<float>(((-(x - x1)) * (y2 - y1)
+//                                  + (y - y1) * (x2 - x1)) /
+//                                    ((-(x0 - x1)) * (y2 - y1)
+//                                  + (y0 - y1) * (x2 - x1)));
+//
+//    beta = params[1] = static_cast<float>(((-(x - x2)) * (y0 - y2)
+//                                  + (y - y2) * (x0 - x2)) /
+//                                 ((-(x1 - x2)) * (y0 - y2)
+//                                  + (y1 - y2) * (x0 - x2)));
+    alpha = params[0] = LineEquation(x, y, x1, y1, x2, y2) / LineEquation(x0, y0, x1, y1, x2, y2);
+    beta = params[1] = LineEquation(x, y, x2, y2, x0, y0) / LineEquation(x1, y1, x2, y2, x0, y0);
+    gamma = params[2] = 1 - params[0] - params[1];
 //    if(params[0] > 1 || params[1] > 1 || params[2] > 1)
 //    {
 //      std::cout<<"计算错误参数大于1！"<<std::endl;
 //      std::cout<<"同时三个参数分别为，alpha:"<<params[0]<<" beta:"<<params[1]<<" gamma:"<<params[2]<<std::endl;
 //      return false;
 //    }
+    //std::cout<<"alpha是"<<alpha<<" beta是"<<beta<<" gamma是"<<gamma<<std::endl;
     return true;
 }
 
