@@ -14,10 +14,12 @@ Color Texture::sample(const SampleParams &sp) {
   if(sp.psm == P_NEAREST)
   {
       //std::cout<<"最邻近采样"<<std::endl;
+      //最邻近采样，我直接比较平方和的大小（距离），选择就近的纹理点
       if((sp.p_uv - sp.p_dx_uv).norm2() >= (sp.p_uv - sp.p_dy_uv).norm2())
           return this->sample_nearest(sp.p_dy_uv + sp.p_uv);
       else
           return this->sample_nearest(sp.p_dx_uv + sp.p_uv);
+
   }
   else
   {
@@ -54,10 +56,31 @@ Color Texture::sample_bilinear(Vector2D uv, int level) {
       std::cout<<"level大于mipmap大小"<<std::endl;
   int tx = static_cast<int>(uv.x * mipmap[level].width);
   int ty = static_cast<int>(uv.y * mipmap[level].height);
-  return mipmap[level].get_texel(tx, ty);
+
+  //采集四个附近的点的坐标
+  int x0 = static_cast<int>(floor(uv.x * mipmap[level].width));
+  int y0 = static_cast<int>(floor(uv.y * mipmap[level].height));
+  int x1 = static_cast<int>(ceil(uv.x * mipmap[level].width));
+  int y1 = static_cast<int>(ceil(uv.y * mipmap[level].height));
+
+  //获取这四个点的
+  Color u00 = mipmap[level].get_texel(x0, y0);
+  Color u10 = mipmap[level].get_texel(x1, y0);
+  Color u01 = mipmap[level].get_texel(x0, y1);
+  Color u11 = mipmap[level].get_texel(x1, y1);
+
+  Color u0 = Lerp(tx - x0, u00, u10);
+  Color u1 = Lerp(tx - x0, u01, u11);
+
+  return Lerp(ty - y0, u0, u1);
 }
 
-
+Color Texture::Lerp(float x, CGL::Color c0, CGL::Color c1)
+{
+    return Color(std::max<float>(c0.r + x * (c1.r - c0.r), 0.0),
+                 std::max<float>(c0.g + x * (c1.g - c0.g), 0.0),
+                 std::max<float>(c0.b + x * (c1.b - c0.b), 0.0));
+}
 
 /****************************************************************************/
 

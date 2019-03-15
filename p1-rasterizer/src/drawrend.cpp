@@ -535,7 +535,7 @@ void DrawRend::rasterize_triangle( float x0, float y0,
       //for part5
       sp.lsm = lsm;
       sp.psm = psm;
-      std::cout<<"当前采样方式是:"<<psm<<std::endl;
+      //std::cout<<"当前采样方式是:"<<psm<<std::endl;
   }
 
   //meide, 这里的一个bug是应该改成小于等于，否则像xMax = 127.5
@@ -547,18 +547,7 @@ void DrawRend::rasterize_triangle( float x0, float y0,
           //行和列不要弄混了,为了避免下标溢出的情况做了一些检查工作
           if (y < 0 || y >= samplebuffer.size() || x < 0 || x >= samplebuffer[y].size())
               continue;
-          //for part 1
-          //中心采样点
-          // float xCenter = x + 0.5f;
-          //float yCenter = y + 0.5f;
 
-        // Part 2: Add supersampling.
-        //         You need to write color to each sub-pixel by yourself,
-        //         instead of using the fill_pixel() function.
-        //         Hint: Use the fill_color() function like this:
-        //             samplebuffer[row][column].fill_color(sub_row, sub_column, color);
-        //         You also need to implement get_pixel_color() function to support supersampling.
-        //
         // for part 2
         //获取一个pixel的引用
           const SampleBuffer &p = samplebuffer[y][x];
@@ -611,32 +600,15 @@ void DrawRend::rasterize_triangle( float x0, float y0,
               }
             }
           }
-
-          /*
-           * for part 1
-           */
-          //float xCenter = x + 0.5f;
-          //float yCenter = y + 0.5f;
-          //int isInside = 0;
-          //对于每个遍历范围内的点进行检测，检测是否在三角形之内
-          //理论上只要三边都大于零或者都小于零就是在三角形之内
-          //因为根据计算公式，我们假定法向量是顺时针或者逆时针的
-          //但是根据P0 P1 P2三点的顺逆时针顺序，会使得得到的sin值全正或者全负（点在三角形之内）
-//          if (-dy_10 * (xCenter - x0) + dx_10 * (yCenter - y0) >= 0)
-//              isInside++;
-//          if (-dy_21 * (xCenter - x1) + dx_21 * (yCenter - y1) >= 0)
-//              isInside++;
-//          if (-dy_02 * (xCenter - x2) + dx_02 * (yCenter - y2) >= 0)
-//              isInside++;
-//
-//          if (isInside == 0 || isInside == 3)
-//          {
-//              samplebuffer[y][x].fill_pixel(color);
-//          }
       }
   }
 
-
+        // Part 2: Add supersampling.
+        //         You need to write color to each sub-pixel by yourself,
+        //         instead of using the fill_pixel() function.
+        //         Hint: Use the fill_color() function like this:
+        //             samplebuffer[row][column].fill_color(sub_row, sub_column, color);
+        //         You also need to implement get_pixel_color() function to support supersampling.
 
   // Part 4: Add barycentric coordinates and use tri->color for shading when available.
 
@@ -647,6 +619,9 @@ void DrawRend::rasterize_triangle( float x0, float y0,
 
 }
 
+/**
+ * 设置重心坐标
+ */
 bool DrawRend::bary_coord(int x, int y, float x0, float y0, float x1, float y1, float x2, float y2, float* params)
 {
     params[0] = static_cast<float>(((-(x - x1)) * (y2 - y1)

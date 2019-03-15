@@ -32,16 +32,17 @@ struct MipLevel {
   //实现一下
   Color get_texel(int tx, int ty)
   {
-      if(3 * (ty * width + tx) < 0 || 3 * (ty * width + tx + 2) >= texels.size())
+      int index = static_cast<int>(3 * (ty * width + tx));
+      if(index < 0 || index + 2 >= texels.size())
       {
           std::cout<<"获取纹理坐标时下标越界！"<<std::endl;
           return Color();
       }
-      float r = static_cast<float>(texels[3 * (ty * width + tx)]) / 255;
-      float g = static_cast<float>(texels[3 * (ty * width + tx + 1)]) / 255;
-      float b = static_cast<float>(texels[3 * (ty * width + tx + 2)]) / 255;
+      float r = static_cast<float>((float)texels[index] / 255.0);
+      float g = static_cast<float>((float)texels[index + 1] / 255.0);
+      float b = static_cast<float>((float)texels[index + 2] / 255.0);
       Color c(r, g, b);
-      std::cout<<"颜色是"<<c<<std::endl;
+      //std::cout<<"颜色是"<<c<<std::endl;
       return c;
   }
 
@@ -73,6 +74,8 @@ struct Texture {
   Color sample_nearest(Vector2D uv, int level = 0);
 
   Color sample_bilinear(Vector2D uv, int level = 0);
+
+  Color Lerp(float x, Color c0, Color c1);
 };
 
 }

@@ -60,9 +60,11 @@ Color ColorTri::color(Vector3D p_bary, Vector3D p_dx_bary, Vector3D p_dy_bary, S
  */
 Color TexTri::color(Vector3D p_bary, Vector3D p_dx_bary, Vector3D p_dy_bary, SampleParams sp) {
   // Part 5: Fill this in with bilinear sampling.
-  // 将传入的sp的uv坐标填充好
-  Vector2D vv(p_bary[0] * p0_uv.x + p_bary[1] * p1_uv.x + p_bary[2] * p2_uv.x,
-              p_bary[0] * p0_uv.y + p_bary[1] * p1_uv.y + p_bary[2] * p2_uv.y);
+  /*
+   * 将传入的sp的uv坐标填充好,其中p_bary包含的是三个重心坐标系数,alpha，beta，gamma
+   * x
+  */
+  Vector2D vv = p_bary[0] * p0_uv + p_bary[1] * p1_uv + p_bary[2] * p2_uv;
   sp.p_uv = vv;
   return tex->sample(sp);
   // Part 6: Fill this in with trilinear sampling as well.
