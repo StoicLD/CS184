@@ -65,6 +65,7 @@ class DrawRend : public Renderer {
   //for part4额外添加一个计算重心坐标系数的函数
   bool bary_coord(float x, float y, float x0, float y0, float x1, float y1, float x2, float y2, float* params);
 
+  bool inside_triangle(float x, float y, float x0, float y0, float x1, float y1, float x2, float y2);
 
 private:
   // Global state variables for SVGs, pixels, and view transforms

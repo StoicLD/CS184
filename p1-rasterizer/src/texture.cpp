@@ -12,48 +12,106 @@ Color Texture::sample(const SampleParams &sp) {
   // Should return a color sampled based on the psm and lsm parameters given
   //std::cout<<"Texture::sample时纹理坐标是 "<<sp.p_uv<<std::endl;
   //直接用原本大小的纹理图片，也就是level0
+  float levelD = 0;
+
+  /*
+   * 首先确定level，默认情况下level是0
+   */
+  //level为0
   if(sp.lsm == L_ZERO)
   {
-      if (sp.psm == P_NEAREST)
-      {
-          //std::cout<<"最邻近采样"<<std::endl;
-          //最邻近采样，我直接比较平方和的大小（距离），选择就近的纹理点
-          return this->sample_nearest(sp.p_uv);
-      }
-      else {
-          //双线性插值的采样
-          if(sp.p_uv.x >= 1 || sp.p_uv.y >=1)
-          {
-            std::cout<<"纹理坐标越界！"<<sp.p_uv<<std::endl;
-          }
-          return this->sample_bilinear(sp.p_uv);
-      }
+    if (sp.psm == P_NEAREST)
+    {
+      //最邻近采样
+      return this->sample_nearest(sp.p_uv, (int)levelD);
+    }
+    else
+    {
+      //双线性插值的采样
+      return this->sample_bilinear(sp.p_uv, (int)levelD);
+    }
   }
-  //用最接近的level
+  //使用最接近的level
   else if(sp.lsm == L_NEAREST)
   {
-
+    //这个就直接选择一个最近的level就OK了
+    //也就是round一下,比如 0.7就round到1，0.2就round到0
+    levelD = round(get_level(sp));
+    if (sp.psm == P_NEAREST)
+    {
+      //最邻近采样，我直接比较平方和的大小（距离），选择就近的纹理点
+      return this->sample_nearest(sp.p_uv, (int)levelD);
+    }
+    else
+    {
+      //双线性插值的采样
+      return this->sample_bilinear(sp.p_uv, (int)levelD);
+    }
   }
-  //采用线性插值，在两个level的纹理图片中插值
+  //采用线性插值level，在两个level的纹理图片中插值
   else
   {
+    levelD = get_level(sp);
+    if (sp.psm == P_NEAREST)
+    {
+      Color c0 = this->sample_nearest(sp.p_uv, (int)floor(levelD));
+      Color c1 = this->sample_nearest(sp.p_uv, (int)ceil(levelD));
+      float factor;
+      float level_up = ceil(levelD);
+      float level_down = floor(levelD);
+      if(level_up == level_down)
+        factor = 0;
+      else
+        factor = (levelD - level_down) / (level_up - level_down);
 
+      Color final_color(c0 + (-factor * c0) + factor * c1);
+      final_color = Color(std::max<float>(0, final_color.r),
+                          std::max<float>(0, final_color.g),
+                          std::max<float>(0, final_color.b));
+      return final_color;
+    }
+    else {
+      //双线性插值的采样
+      return this->sample_bilinear(sp.p_uv, levelD);
+    }
   }
+
+
+
+
   return Color();
 }
 
+/**
+ * 获取的level是一个float类型的，之后会根据nearest还是linear来
+ * 得到最终的值
+ * @param sp
+ * @return
+ */
 float Texture::get_level(const SampleParams &sp) {
   // Optional helper function for Parts 5 and 6
+  Vector2D dx_uv = sp.p_dx_uv - sp.p_uv;
+  Vector2D dy_uv = sp.p_dy_uv - sp.p_uv;
 
-  return 0;
+  float L2 = std::max<float>((dx_uv * width).norm2(), (dy_uv * height).norm2());
+  if(L2 <= 0.000001f)
+    return 0;
+//  std::cout<<"L2s是"<<L2<<std::endl;
+//  std::cout<<"L是"<<sqrt(L2)<<std::endl;
+  float levelD = log2(sqrt(L2));
+//  std::cout<<"levelD是"<<levelD<<std::endl;
+  return levelD;
 }
 
 // Returns the nearest sample given a particular level and set of uv coords
 Color Texture::sample_nearest(Vector2D uv, int level) {
-  // Optional helper function for Parts 5 and 6
-  // Feel free to ignore or create your own
-  if(level >= mipmap.size())
-    std::cout<<"level大于mipmap大小"<<std::endl;
+      // Optional helper function for Parts 5 and 6
+      // Feel free to ignore or create your own
+  if (level >= mipmap.size() || level < 0)
+  {
+      std::cout << "level越界了！" << std::endl;
+      return Color();
+  }
   int tx = static_cast<int>(uv.x * mipmap[level].width);
   int ty = static_cast<int>(uv.y * mipmap[level].height);
   return mipmap[level].get_texel(tx, ty);
@@ -64,8 +122,11 @@ Color Texture::sample_bilinear(Vector2D uv, int level) {
       // Optional helper function for Parts 5 and 6
       // Feel free to ignore or create your own
       // for part5 先不管level
-      if (level >= mipmap.size())
-        std::cout << "level大于mipmap大小" << std::endl;
+      if (level >= mipmap.size() || level < 0)
+      {
+        std::cout << "level越界了！" << std::endl;
+        return Color();
+      }
       float tx = static_cast<float>(uv.x * mipmap[level].width);
       float ty = static_cast<float>(uv.y * mipmap[level].height);
 

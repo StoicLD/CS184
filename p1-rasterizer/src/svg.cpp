@@ -47,7 +47,9 @@ void Triangle::draw(DrawRend *dr, Matrix3x3 global_transform) {
  */
 Color ColorTri::color(Vector3D p_bary, Vector3D p_dx_bary, Vector3D p_dy_bary, SampleParams sp) {
   // Part 4: Fill this in.
-  // p_bary是alpha，beta，gama三个系数
+  /* p_bary是alpha，beta，gama三个系数
+   * 采用三角插值，三个系数各自乘上三个顶点的颜色值就是采样点的颜色值。
+   */
   return Color(p_bary[0] * p0_col + p_bary[1] * p1_col + p_bary[2] * p2_col);
 }
 
@@ -62,10 +64,18 @@ Color TexTri::color(Vector3D p_bary, Vector3D p_dx_bary, Vector3D p_dy_bary, Sam
   // Part 5: Fill this in with bilinear sampling.
   /*
    * 将传入的sp的uv坐标填充好,其中p_bary包含的是三个重心坐标系数,alpha，beta，gamma
-   * x
+   * 得到的vv是在纹理中的采样点，大小介于[0,1]
   */
-  Vector2D vv = p_bary[0] * p0_uv + p_bary[1] * p1_uv + p_bary[2] * p2_uv;
-  sp.p_uv = vv;
+  Vector2D tex_point = p_bary[0] * p0_uv + p_bary[1] * p1_uv + p_bary[2] * p2_uv;
+  sp.p_uv = tex_point;
+  
+  //for part6 计算临近的两个点的纹理采样点
+  Vector2D dx_uv = p_dx_bary[0] * p0_uv + p_dx_bary[1] * p1_uv + p_dx_bary[2] * p2_uv;
+  sp.p_dx_uv = dx_uv;
+
+  Vector2D dy_uv = p_dy_bary[0] * p0_uv + p_dy_bary[1] * p1_uv + p_dy_bary[2] * p2_uv;
+  sp.p_dy_uv = dy_uv;
+
   return tex->sample(sp);
   // Part 6: Fill this in with trilinear sampling as well.
   //return Color();

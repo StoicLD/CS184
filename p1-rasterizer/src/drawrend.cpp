@@ -519,12 +519,12 @@ void DrawRend::rasterize_triangle( float x0, float y0,
   float yMin = std::min(y0, y1);
   yMin = std::min(yMin, y2);
 
-  float dx_10 = x1 - x0;
-  float dx_21 = x2 - x1;
-  float dx_02 = x0 - x2;
-  float dy_10 = y1 - y0;
-  float dy_21 = y2 - y1;
-  float dy_02 = y0 - y2;
+//  float dx_10 = x1 - x0;
+//  float dx_21 = x2 - x1;
+//  float dx_02 = x0 - x2;
+//  float dy_10 = y1 - y0;
+//  float dy_21 = y2 - y1;
+//  float dy_02 = y0 - y2;
 
   // add for part4
   bool isBary = false;
@@ -560,17 +560,18 @@ void DrawRend::rasterize_triangle( float x0, float y0,
               float xCenter = x + centerLength * (sub_x + 1) - centerLength / 2;
               float yCenter = y + centerLength * (sub_y + 1) - centerLength / 2;
 
-              int isInside = 0;
+//              int isInside = 0;
               //三角形内部判断（当isInside是0或者3也就是与三边的法向量夹角全部是
               //锐角或者全部是钝角的时候在三角形的内部。
-              if (-dy_10 * (xCenter - x0) + dx_10 * (yCenter - y0) >= 0)
-                isInside++;
-              if (-dy_21 * (xCenter - x1) + dx_21 * (yCenter - y1) >= 0)
-                isInside++;
-              if (-dy_02 * (xCenter - x2) + dx_02 * (yCenter - y2) >= 0)
-                isInside++;
+//              if (-dy_10 * (xCenter - x0) + dx_10 * (yCenter - y0) >= 0)
+//                isInside++;
+//              if (-dy_21 * (xCenter - x1) + dx_21 * (yCenter - y1) >= 0)
+//                isInside++;
+//              if (-dy_02 * (xCenter - x2) + dx_02 * (yCenter - y2) >= 0)
+//                isInside++;
 
-              if (isInside == 0 || isInside == 3) {
+              if (inside_triangle(xCenter, yCenter, x0, y0, x1, y1, x2, y2))
+              {
                   if(!isBary)
                       samplebuffer[y][x].fill_color(sub_x, sub_y, color);
                   //for part4，这里需要注意，由于三个坐标在传入的时候是经过一个全局变换的，所以x0等是与
@@ -589,12 +590,27 @@ void DrawRend::rasterize_triangle( float x0, float y0,
                       }
                       Vector3D v3(params[0], params[1], params[2]);
                       //for part5 加入了新的参数，纹理坐标中临近的两个点
-                      /*    这两个点是为了part6准备的，暂时用不到
-                       *    ##
+
+                      /*    这两个点是为了part6准备的，
+                       *    其中p_dx_bary表示点
+                       *    计算采样点临近的两个点的重心系数，然后
                        *    ##
                        */
-                      Vector3D p_dx_bary;
-                      Vector3D p_dy_bary;
+                      float dx_params[3] = {1, 1, 1};
+                      float dy_params[3] = {1, 1, 1};
+                      float p_dx = xCenter + 1;
+                      float p_dy = yCenter + 1;
+                      //判断一下两个邻近的点是否在三角形之内
+                      if(!inside_triangle(xCenter + 1, yCenter, x0, y0, x1, y1, x2, y2))
+                          p_dx = xCenter;
+                      if(!inside_triangle(xCenter, yCenter + 1, x0, y0, x1, y1, x2, y2))
+                          p_dy = yCenter;
+
+                      this->bary_coord(p_dx, yCenter, x0, y0, x1, y1, x2, y2, dx_params);
+                      this->bary_coord(xCenter, p_dy, x0, y0, x1, y1, x2, y2, dy_params);
+                      Vector3D p_dx_bary(dx_params[0], dx_params[1], dx_params[2]);
+                      Vector3D p_dy_bary(dy_params[0], dy_params[1], dy_params[2]);
+
                       Color cc = tri->color(v3, p_dx_bary, p_dy_bary, sp);
                       samplebuffer[y][x].fill_color(sub_x, sub_y, cc);
                   }
@@ -625,6 +641,28 @@ float LineEquation(float x, float y, float x1, float y1, float x2, float y2)
     return (-(x - x1) * (y2 - y1) + (y - y1) * (x2 - x1));
 }
 
+//(-dy_10 * (xCenter - x0) + dx_10 * (yCenter - y0) >= 0)
+bool DrawRend::inside_triangle(float x, float y, float x0, float y0, float x1, float y1, float x2, float y2)
+{
+    int inside = 0;
+    float dx_10 = x1 - x0;
+    float dx_21 = x2 - x1;
+    float dx_02 = x0 - x2;
+    float dy_10 = y1 - y0;
+    float dy_21 = y2 - y1;
+    float dy_02 = y0 - y2;
+
+    if (-dy_10 * (x - x0) + dx_10 * (y - y0) >= 0)
+      inside++;
+    if (-dy_21 * (x - x1) + dx_21 * (y - y1) >= 0)
+      inside++;
+    if (-dy_02 * (x - x2) + dx_02 * (y - y2) >= 0)
+      inside++;
+
+    if(inside == 0 || inside == 3)
+      return true;
+    return false;
+}
 
 /**
  * 设置重心坐标
