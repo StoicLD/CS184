@@ -32,11 +32,15 @@ struct MipLevel {
   //实现一下
   Color get_texel(int tx, int ty)
   {
+      tx = std::min<int>(tx, width - 1);
+      ty = std::min<int>(ty, height - 1);
       int index = static_cast<int>(3 * (ty * width + tx));
       //std::cout<<"index下标是"<<index<<std::endl;
       if(index < 0 || index + 2 >= texels.size())
       {
           std::cout<<"获取纹理坐标时下标越界！"<<std::endl;
+          std::cout<<"坐标是"<<index<<"最大下标是"<<texels.size()<<std::endl;
+          std::cout<<"此时ty和tx分别是("<<tx<<","<<ty<<") "<<std::endl;
           return Color();
       }
       float r = static_cast<float>((float)texels[index] / 255.0);

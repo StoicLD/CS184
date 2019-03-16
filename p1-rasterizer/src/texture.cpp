@@ -11,28 +11,40 @@ Color Texture::sample(const SampleParams &sp) {
   // 检查sp的采样方式，决定采样的类型格式之类的
   // Should return a color sampled based on the psm and lsm parameters given
   //std::cout<<"Texture::sample时纹理坐标是 "<<sp.p_uv<<std::endl;
-  if(sp.psm == P_NEAREST)
+  //直接用原本大小的纹理图片，也就是level0
+  if(sp.lsm == L_ZERO)
   {
-      //std::cout<<"最邻近采样"<<std::endl;
-      //最邻近采样，我直接比较平方和的大小（距离），选择就近的纹理点
-      if((sp.p_uv - sp.p_dx_uv).norm2() >= (sp.p_uv - sp.p_dy_uv).norm2())
-          return this->sample_nearest(sp.p_dy_uv + sp.p_uv);
-      else
-          return this->sample_nearest(sp.p_dx_uv + sp.p_uv);
+      if (sp.psm == P_NEAREST)
+      {
+          //std::cout<<"最邻近采样"<<std::endl;
+          //最邻近采样，我直接比较平方和的大小（距离），选择就近的纹理点
+          return this->sample_nearest(sp.p_uv);
+      }
+      else {
+          //双线性插值的采样
+          if(sp.p_uv.x >= 1 || sp.p_uv.y >=1)
+          {
+            std::cout<<"纹理坐标越界！"<<sp.p_uv<<std::endl;
+          }
+          return this->sample_bilinear(sp.p_uv);
+      }
+  }
+  //用最接近的level
+  else if(sp.lsm == L_NEAREST)
+  {
 
   }
+  //采用线性插值，在两个level的纹理图片中插值
   else
   {
-      //双线性插值的采样
 
-      return this->sample_bilinear(sp.p_uv);
   }
-
   return Color();
 }
 
 float Texture::get_level(const SampleParams &sp) {
   // Optional helper function for Parts 5 and 6
+
   return 0;
 }
 
@@ -49,28 +61,39 @@ Color Texture::sample_nearest(Vector2D uv, int level) {
 
 // Returns the bilinear sample given a particular level and set of uv coords
 Color Texture::sample_bilinear(Vector2D uv, int level) {
-  // Optional helper function for Parts 5 and 6
-  // Feel free to ignore or create your own
-  // for part5 先不管level
-  if(level >= mipmap.size())
-      std::cout<<"level大于mipmap大小"<<std::endl;
-  int tx = static_cast<int>(uv.x * mipmap[level].width);
-  int ty = static_cast<int>(uv.y * mipmap[level].height);
+      // Optional helper function for Parts 5 and 6
+      // Feel free to ignore or create your own
+      // for part5 先不管level
+      if (level >= mipmap.size())
+        std::cout << "level大于mipmap大小" << std::endl;
+      float tx = static_cast<float>(uv.x * mipmap[level].width);
+      float ty = static_cast<float>(uv.y * mipmap[level].height);
 
-  //采集四个附近的点的坐标
-  int x0 = static_cast<int>(floor(uv.x * mipmap[level].width));
-  int y0 = static_cast<int>(floor(uv.y * mipmap[level].height));
-  int x1 = static_cast<int>(ceil(uv.x * mipmap[level].width));
-  int y1 = static_cast<int>(ceil(uv.y * mipmap[level].height));
+      //采集四个附近的点的坐标
+      //
+      int x0 = static_cast<int>(floor(tx));   //向下取整 2.1 ==> 2.0, 2.0 ==> 2.0
+      int y0 = static_cast<int>(floor(ty));
+      int x1 = static_cast<int>(ceil(tx));    //向上取整 2.1 ==> 3.0, 2.0 ==> 2.0
+      int y1 = static_cast<int>(ceil(ty));
 
-  //获取这四个点的
-  Color u00 = mipmap[level].get_texel(x0, y0);
-  Color u10 = mipmap[level].get_texel(x1, y0);
-  Color u01 = mipmap[level].get_texel(x0, y1);
-  Color u11 = mipmap[level].get_texel(x1, y1);
+      //获取这四个点的
+      Color u00 = mipmap[level].get_texel(x0, y0);
+      Color u10 = mipmap[level].get_texel(x1, y0);
+      Color u01 = mipmap[level].get_texel(x0, y1);
+      Color u11 = mipmap[level].get_texel(x1, y1);
 
-  Color u0 = Lerp(tx - x0, u00, u10);
-  Color u1 = Lerp(tx - x0, u01, u11);
+      Color u0;
+      Color u1;
+      if (x1 == x0)
+      {
+        u0 = u00;
+        u1 = u01;
+      }
+      else
+      {
+        u0 = Lerp((tx - x0) / (x1 - x0), u00, u10);
+        u1 = Lerp((tx - x0) / (x1 - x0), u01, u11);
+      }
 
   return Lerp(ty - y0, u0, u1);
 }
