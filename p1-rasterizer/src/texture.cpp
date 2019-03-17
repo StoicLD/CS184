@@ -75,11 +75,6 @@ Color Texture::sample(const SampleParams &sp) {
       return this->sample_bilinear(sp.p_uv, levelD);
     }
   }
-
-
-
-
-  return Color();
 }
 
 /**
