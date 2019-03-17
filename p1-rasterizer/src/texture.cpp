@@ -90,16 +90,20 @@ Color Texture::sample(const SampleParams &sp) {
  */
 float Texture::get_level(const SampleParams &sp) {
   // Optional helper function for Parts 5 and 6
+  // 这是两个很小的向量（看作是向量微元）
   Vector2D dx_uv = sp.p_dx_uv - sp.p_uv;
   Vector2D dy_uv = sp.p_dy_uv - sp.p_uv;
 
-  float L2 = std::max<float>((dx_uv * width).norm2(), (dy_uv * height).norm2());
-  if(L2 <= 0.000001f)
+  //L2是L的平方，而L就是一个pixel在纹理贴图中占据多少个texl
+  Vector2D dx_uv_2(dx_uv.x * width, dx_uv.y *height);
+  Vector2D dy_uv_2(dy_uv.x * width, dy_uv.y *height);
+  float L2 = std::max<float>(dx_uv_2.norm2(), dy_uv_2.norm2());
+  if(L2 <= 1)
     return 0;
 //  std::cout<<"L2s是"<<L2<<std::endl;
 //  std::cout<<"L是"<<sqrt(L2)<<std::endl;
   float levelD = log2(sqrt(L2));
-//  std::cout<<"levelD是"<<levelD<<std::endl;
+
   return levelD;
 }
 
@@ -107,14 +111,14 @@ float Texture::get_level(const SampleParams &sp) {
 Color Texture::sample_nearest(Vector2D uv, int level) {
       // Optional helper function for Parts 5 and 6
       // Feel free to ignore or create your own
-  if (level >= mipmap.size() || level < 0)
-  {
-      std::cout << "level越界了！" << std::endl;
-      return Color();
-  }
-  int tx = static_cast<int>(uv.x * mipmap[level].width);
-  int ty = static_cast<int>(uv.y * mipmap[level].height);
-  return mipmap[level].get_texel(tx, ty);
+      if (level >= mipmap.size() || level < 0)
+      {
+          std::cout << "level越界了！ 此时的level大小是:" <<level<<" 坐标是:"<<uv<<std::endl;
+          return Color();
+      }
+      int tx = static_cast<int>(uv.x * mipmap[level].width);
+      int ty = static_cast<int>(uv.y * mipmap[level].height);
+      return mipmap[level].get_texel(tx, ty);
 }
 
 // Returns the bilinear sample given a particular level and set of uv coords
@@ -124,8 +128,8 @@ Color Texture::sample_bilinear(Vector2D uv, int level) {
       // for part5 先不管level
       if (level >= mipmap.size() || level < 0)
       {
-        std::cout << "level越界了！" << std::endl;
-        return Color();
+          std::cout << "level越界了！ 此时的level大小是:" <<level<<" 坐标是:"<<uv<<std::endl;
+          return Color();
       }
       float tx = static_cast<float>(uv.x * mipmap[level].width);
       float ty = static_cast<float>(uv.y * mipmap[level].height);

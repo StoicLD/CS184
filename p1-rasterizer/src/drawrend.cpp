@@ -519,13 +519,6 @@ void DrawRend::rasterize_triangle( float x0, float y0,
   float yMin = std::min(y0, y1);
   yMin = std::min(yMin, y2);
 
-//  float dx_10 = x1 - x0;
-//  float dx_21 = x2 - x1;
-//  float dx_02 = x0 - x2;
-//  float dy_10 = y1 - y0;
-//  float dy_21 = y2 - y1;
-//  float dy_02 = y0 - y2;
-
   // add for part4
   bool isBary = false;
   SampleParams sp;
@@ -559,16 +552,6 @@ void DrawRend::rasterize_triangle( float x0, float y0,
               float centerLength = (1.0f / p.samples_per_side);
               float xCenter = x + centerLength * (sub_x + 1) - centerLength / 2;
               float yCenter = y + centerLength * (sub_y + 1) - centerLength / 2;
-
-//              int isInside = 0;
-              //三角形内部判断（当isInside是0或者3也就是与三边的法向量夹角全部是
-              //锐角或者全部是钝角的时候在三角形的内部。
-//              if (-dy_10 * (xCenter - x0) + dx_10 * (yCenter - y0) >= 0)
-//                isInside++;
-//              if (-dy_21 * (xCenter - x1) + dx_21 * (yCenter - y1) >= 0)
-//                isInside++;
-//              if (-dy_02 * (xCenter - x2) + dx_02 * (yCenter - y2) >= 0)
-//                isInside++;
 
               if (inside_triangle(xCenter, yCenter, x0, y0, x1, y1, x2, y2))
               {
@@ -620,12 +603,12 @@ void DrawRend::rasterize_triangle( float x0, float y0,
       }
   }
 
-        // Part 2: Add supersampling.
-        //         You need to write color to each sub-pixel by yourself,
-        //         instead of using the fill_pixel() function.
-        //         Hint: Use the fill_color() function like this:
-        //             samplebuffer[row][column].fill_color(sub_row, sub_column, color);
-        //         You also need to implement get_pixel_color() function to support supersampling.
+  // Part 2: Add supersampling.
+  //         You need to write color to each sub-pixel by yourself,
+  //         instead of using the fill_pixel() function.
+  //         Hint: Use the fill_color() function like this:
+  //             samplebuffer[row][column].fill_color(sub_row, sub_column, color);
+  //         You also need to implement get_pixel_color() function to support supersampling.
 
   // Part 4: Add barycentric coordinates and use tri->color for shading when available.
 
